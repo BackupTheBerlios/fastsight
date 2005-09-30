@@ -1,0 +1,338 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0106 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <stdio.h>} {} 
+
+decl {\#include <stdlib.h>} {} 
+
+decl {\#include <string.h>} {} 
+
+decl {\#include "cfgmanager.h"} {} 
+
+decl {\#include "capture.h"} {} 
+
+decl {\#include "connect.h"} {} 
+
+decl {\#include "filters.h"} {} 
+
+decl {\#include "filtercfg.h"} {} 
+
+decl {extern int enc_rate;} {} 
+
+decl {extern FILE *record_file;} {} 
+
+Function {make_main_wnd()} {open
+} {
+  Fl_Window mainwnd {
+    label fastsight
+    xywh {296 167 340 330} type Double color 52 hide
+  } {
+    Fl_Box videoarea {
+      xywh {5 55 330 250} box EMBOSSED_BOX color 7
+    }
+    Fl_Button {} {
+      callback {show_config_wnd();}
+      tooltip Configure image {images/configure.png} xywh {10 5 50 45} box PLASTIC_UP_BOX color 55
+    }
+    Fl_Button {} {
+      callback {capture_config();}
+      tooltip {Video device settings} image {images/videosets.png} xywh {65 5 50 45} box PLASTIC_UP_BOX color 55
+    }
+    Fl_Box statusbar {
+      xywh {0 310 340 20} box THIN_DOWN_BOX color 52 align 17
+    }
+    Fl_Button {} {
+      callback {filterswnd->show();}
+      tooltip {Video filters} image {images/filters.png} xywh {120 5 50 45} box PLASTIC_UP_BOX color 55
+    }
+    Fl_Button {} {
+      callback {char path[256];
+char *shotdir = cfgmanager_get_value("shotdir");
+FILE *fp;
+int i;
+if(shotdir[strlen(shotdir)-1] == '/')
+  shotdir[strlen(shotdir)-1] = 0;
+for(i = 1; ; i++)
+{
+  sprintf(path, "%s/shot%d.pnm", shotdir, i);
+  if(!(fp = fopen(path, "r")))
+    break;
+  fclose(fp);
+}
+fp = fopen(path, "wb");
+fputs("P6\\n320 240\\n255\\n", fp);
+fwrite(((Fl_RGB_Image *)videoarea->image())->array, 320*240*3, 1, fp);
+fclose(fp);}
+      tooltip {Take a shot} image {images/shot.png} xywh {175 5 50 45} box PLASTIC_UP_BOX color 55
+    }
+    Fl_Button {} {
+      callback {if(record_file)
+{
+  fclose(record_file);
+  record_file = 0;
+  statusbar->label("[ Recording Stoped ]");
+} else {
+  char path[256];
+  char *shotdir = cfgmanager_get_value("shotdir");
+  FILE *fp;
+  int i;
+  if(shotdir[strlen(shotdir)-1] == '/')
+    shotdir[strlen(shotdir)-1] = 0;
+  for(i = 1; ; i++)
+  {
+    sprintf(path, "%s/video%d.fsv", shotdir, i);
+    if(!(fp = fopen(path, "r")))
+      break;
+    fclose(fp);
+  }
+  record_file = fopen(path, "wb");
+  statusbar->label("[ Recording Started ]");
+}} selected
+      tooltip {Start or stop recording video} image {images/record.png} xywh {230 5 50 45} box PLASTIC_UP_BOX color 55
+    }
+    Fl_Button {} {
+      callback {aboutwnd->show();}
+      tooltip About image {images/about.png} xywh {285 5 50 45} box PLASTIC_UP_BOX color 55
+    }
+  }
+} 
+
+Function {make_config_wnd()} {} {
+  Fl_Window configwnd {
+    label Configure
+    xywh {274 387 295 230} type Double color 52 hide
+  } {
+    Fl_Box {} {
+      xywh {10 16 277 104} box ENGRAVED_FRAME align 1
+    }
+    Fl_Box {} {
+      xywh {10 134 277 54} box ENGRAVED_FRAME align 1
+    }
+    Fl_Box {} {
+      label {JPEG2000 Codec Settings}
+      xywh {20 123 190 26} box FLAT_BOX color 52 labelfont 4
+    }
+    Fl_Box {} {
+      label {Fastsight Settings}
+      xywh {20 5 155 25} box FLAT_BOX color 52 labelfont 4
+    }
+    Fl_Input listenport {
+      label {Listen port:}
+      tooltip {Fastsight, when acting as a server, will try to listen beginning on this TCP port. Please configure your firewall to accept connections in this port, if required.} xywh {105 30 170 25} box PLASTIC_THIN_DOWN_BOX
+    }
+    Fl_File_Input shotdir {
+      label {Shot directory path:}
+      tooltip {The snapshots taken using the "Take a shot" button and grabbed videos will be saved in this directory.} xywh {23 77 252 33} box PLASTIC_THIN_DOWN_BOX align 5
+    }
+    Fl_Input j2krate {
+      label {Rate:}
+      tooltip {This is the rate used to encode images using libj2k. Increase this number to increase image quality.} xywh {62 151 215 25} box PLASTIC_THIN_DOWN_BOX
+    }
+    Fl_Return_Button {} {
+      label OK
+      callback {cfgmanager_set_value("listenport", (char *)listenport->value());
+cfgmanager_set_value("shotdir", (char *)shotdir->value());
+cfgmanager_set_value("j2krate", (char *)j2krate->value());
+enc_rate = atoi(j2krate->value());
+configwnd->hide();}
+      xywh {200 195 85 25} box PLASTIC_THIN_UP_BOX color 55
+    }
+  }
+} 
+
+Function {make_connect_wnd()} {} {
+  Fl_Window connectwnd {
+    label {fastsight - connect}
+    xywh {1 20 355 150} type Double color 52 hide
+  } {
+    Fl_Box {} {
+      xywh {9 10 70 130} box ENGRAVED_BOX color 50
+    }
+    Fl_Box {} {
+      xywh {90 27 253 55} box ENGRAVED_BOX color 50
+    }
+    Fl_Button {} {
+      callback {show_config_wnd();}
+      tooltip Configure image {images/configure.png} xywh {19 25 50 45} box PLASTIC_UP_BOX color 55
+    }
+    Fl_Button {} {
+      callback {capture_config();}
+      tooltip {Video device settings} image {images/videosets.png} xywh {19 80 50 45} box PLASTIC_UP_BOX color 55
+    }
+    Fl_Input txtcode {
+      label {Connection code:}
+      xywh {100 48 235 25} box PLASTIC_THIN_DOWN_BOX align 1
+    }
+    Fl_Button {} {
+      label {Generate connection code}
+      callback {connect_create_server();}
+      tooltip {Generates a connection code and displays it in the box.} xywh {90 85 255 25} box PLASTIC_UP_BOX color 55
+    }
+    Fl_Button {} {
+      label {Connect with given code}
+      callback {connect_create_client();}
+      tooltip {Connects using the connection code given in the box.} xywh {90 113 255 25} box PLASTIC_UP_BOX color 55
+    }
+    Fl_Group {} {
+      xywh {88 0 260 32}
+    } {
+      Fl_Round_Button chkview {
+        label {View webcam}
+        callback {chksend->value(!chkview->value());}
+        xywh {93 0 120 30} down_box PLASTIC_DOWN_BOX value 1
+      }
+      Fl_Round_Button chksend {
+        label {Send webcam}
+        callback {chkview->value(!chksend->value());}
+        xywh {218 0 120 30} down_box PLASTIC_DOWN_BOX
+      }
+    }
+  }
+} 
+
+Function {make_about_wnd()} {} {
+  Fl_Window aboutwnd {
+    label {About fastsight}
+    xywh {455 205 325 380} type Double color 52 hide
+  } {
+    Fl_Box {} {
+      xywh {6 5 313 105} box ENGRAVED_BOX color 40
+    }
+    Fl_Box {} {
+      image {images/fast.png} xywh {13 15 90 60} color 31
+    }
+    Fl_Box {} {
+      image {images/video.png} xywh {33 35 90 60} color 31
+    }
+    Fl_Box {} {
+      label fastsight
+      xywh {123 35 170 30} labeltype SHADOW_LABEL labelfont 1 labelsize 33 labelcolor 93
+    }
+    Fl_Box {} {
+      label {0.1}
+      xywh {123 70 170 20} labelfont 4 labelcolor 93
+    }
+    Fl_Box {} {
+      xywh {6 115 313 70} box ENGRAVED_FRAME
+    }
+    Fl_Box {} {
+      label {Copyright (c) 2005 Paulo Matias}
+      xywh {11 119 300 15} labelfont 4 labelsize 10
+    }
+    Fl_Box {} {
+      label {This program comes with ABSOLUTELY NO WARRANTY. This is free}
+      xywh {11 135 300 15} labelfont 4 labelsize 9
+    }
+    Fl_Box {} {
+      label {software. You are welcome to redistribute it under certain}
+      xywh {11 145 290 15} labelfont 4 labelsize 9
+    }
+    Fl_Box {} {
+      label {conditions. Visit http://www.gnu.org/licenses/gpl.html for}
+      xywh {11 155 290 15} labelfont 4 labelsize 9
+    }
+    Fl_Box {} {
+      label {details. Visit http://fastsight.berlios.de for source code.}
+      xywh {11 166 295 14} labelfont 4 labelsize 9
+    }
+    Fl_Box {} {
+      xywh {6 190 313 185} box ENGRAVED_FRAME
+    }
+    Fl_Box {} {
+      label {This software uses libj2k 0.0.9.}
+      xywh {13 195 300 15} labelfont 4 labelsize 10
+    }
+    Fl_Box {} {
+      label {Copyright (c) 2001-2002, David Janssens}
+      xywh {13 206 300 15} labelfont 4 labelsize 10
+    }
+    Fl_Box {} {
+      label {THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS `AS IS'}
+      xywh {13 279 299 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE}
+      xywh {12 286 295 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE}
+      xywh {13 294 295 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE}
+      xywh {13 301 293 16} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR}
+      xywh {12 310 270 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF}
+      xywh {13 318 272 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS}
+      xywh {11 326 290 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN}
+      xywh {12 334 285 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)}
+      xywh {12 342 283 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE}
+      xywh {12 350 295 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {POSSIBILITY OF SUCH DAMAGE.}
+      xywh {11 357 110 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {Redistribution and use in source and binary forms, with or without}
+      xywh {13 220 267 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {modification, are permitted provided that the following conditions are met:}
+      xywh {14 228 299 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {1. Redistributions of source code must retain the above copyright notice,}
+      xywh {11 239 299 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {   notice, this list of conditions and the following disclaimer.}
+      xywh {13 246 259 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {2. Redistributions in binary form must reproduce the above copyright}
+      xywh {14 253 273 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {   notice, this list of conditions and the following disclaimer in the}
+      xywh {13 260 282 15} labelfont 4 labelsize 6
+    }
+    Fl_Box {} {
+      label {   documentation and/or other materials provided with the distribution.}
+      xywh {13 267 287 15} labelfont 4 labelsize 6
+    }
+  }
+} 
+
+Function {show_config_wnd()} {return_type void
+} {
+  code {char *scfg;
+if(!(scfg = cfgmanager_get_value("listenport")))
+  cfgmanager_set_value("listenport", scfg = "7000");
+listenport->value(scfg);
+if(!(scfg = cfgmanager_get_value("shotdir")))
+  cfgmanager_set_value("shotdir", scfg = ".");
+shotdir->value(scfg);
+if(!(scfg = cfgmanager_get_value("j2krate")))
+  cfgmanager_set_value("j2krate", scfg = "3000");
+j2krate->value(scfg);
+configwnd->show();} {}
+} 

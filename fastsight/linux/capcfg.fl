@@ -1,0 +1,70 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0106 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <stdio.h>} {} 
+
+decl {\#include <stdlib.h>} {} 
+
+decl {\#include "cfgmanager.h"} {} 
+
+decl {\#include "capturepriv.h"} {} 
+
+Function {make_capcfg_wnd()} {open private
+} {
+  Fl_Window capcfgwnd {
+    label {Video device settings} open
+    xywh {472 380 330 170} type Double color 52 hide
+  } {
+    Fl_File_Input videodev {
+      label {Video device:}
+      tooltip {The video4linux device from which we will capture.} xywh {105 10 215 30} box PLASTIC_THIN_DOWN_BOX
+    }
+    Fl_Input videochan {
+      label {Channel:}
+      tooltip {The device channel from which we will capture.} xywh {105 45 215 25} box PLASTIC_THIN_DOWN_BOX
+    }
+    Fl_Slider brightness {
+      label {Brightness:}
+      callback {capture_set_brightness((int)brightness->value());}
+      tooltip {Brightness of the image.} xywh {105 76 215 20} type {Horz Knob} box PLASTIC_THIN_DOWN_BOX align 4 maximum 65535 value 32768
+    }
+    Fl_Slider contrast {
+      label {Contrast:}
+      callback {capture_set_contrast((int)contrast->value());}
+      tooltip {Contrast of the image.} xywh {105 102 215 20} type {Horz Knob} box PLASTIC_THIN_DOWN_BOX align 4 maximum 65535 value 32768
+    }
+    Fl_Return_Button {} {
+      label OK
+      callback {char stmp[16];
+cfgmanager_set_value("videodev", (char *)videodev->value());
+cfgmanager_set_value("videochan", (char *)videochan->value());
+sprintf(stmp, "%d", (int)brightness->value());
+cfgmanager_set_value("brightness", stmp);
+sprintf(stmp, "%d", (int)contrast->value());
+cfgmanager_set_value("contrast", stmp);
+capcfgwnd->hide();}
+      xywh {235 135 85 25} box PLASTIC_THIN_UP_BOX
+    }
+  }
+} 
+
+Function {capture_config()} {open return_type void
+} {
+  code {char *scfg;
+if(!capcfgwnd)
+  make_capcfg_wnd();
+if(!(scfg = cfgmanager_get_value("videodev")))
+  cfgmanager_set_value("videodev", scfg = "/dev/video0");
+videodev->value(scfg);
+if(!(scfg = cfgmanager_get_value("videochan")))
+  cfgmanager_set_value("videochan", scfg = "0");
+videochan->value(scfg);
+if(!(scfg = cfgmanager_get_value("brightness")))
+  cfgmanager_set_value("brightness", scfg = "32768");
+brightness->value((double)atoi(scfg));
+if(!(scfg = cfgmanager_get_value("contrast")))
+  cfgmanager_set_value("contrast", scfg = "32768");
+contrast->value((double)atoi(scfg));
+capcfgwnd->show();} {}
+} 

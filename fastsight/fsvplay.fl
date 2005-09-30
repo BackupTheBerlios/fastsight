@@ -1,0 +1,116 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0106 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include "j2kcodec.h"} {} 
+
+decl {\#include <FL/Fl_File_Chooser.H>} {} 
+
+decl {\#include <string.h>} {} 
+
+decl {int playing = 0;} {} 
+
+decl {unsigned int nframes = 0;} {} 
+
+decl {char *filename;} {} 
+
+decl {FILE *fp, *idxf;} {} 
+
+Function {make_main_wnd()} {open
+} {
+  Fl_Window mainwnd {
+    label {fastsight video player} open
+    xywh {396 395 340 300} type Double color 52 hide
+  } {
+    Fl_Box videoarea {
+      xywh {4 45 330 250} box EMBOSSED_BOX color 7
+    }
+    Fl_Button {} {
+      callback {playing = 1;
+Fl::repeat_timeout(0.1, show_video);}
+      image {/home/paulo/Projetos/fastsight/images/play.png} xywh {10 5 35 35} box PLASTIC_THIN_UP_BOX color 52
+    }
+    Fl_Button {} {
+      callback {playing = 0;}
+      image {/home/paulo/Projetos/fastsight/images/pause.png} xywh {50 5 35 35} box PLASTIC_THIN_UP_BOX color 52
+    }
+    Fl_Slider position {
+      callback {unsigned int pos;
+fseek(idxf, ((unsigned int)position->value())*4, SEEK_SET);
+fread(&pos, 1, 4, idxf);
+fseek(fp, pos, SEEK_SET);
+if(!playing)
+  show_video(0);}
+      xywh {90 10 245 25} type {Horz Knob} box PLASTIC_THIN_DOWN_BOX
+    }
+  }
+} 
+
+Function {show_video(void*)} {open return_type void
+} {
+  code {unsigned int len;
+unsigned char *buf, *rgbimg;
+if(fread(&len, 1, 4, fp) != 4)
+{
+  playing = 0;
+  return;
+}
+buf = (unsigned char *)malloc(len);
+if(fread(buf, 1, len, fp) != len)
+{
+  playing = 0;
+  return;
+}
+j2kcodec_decode(buf, len, &rgbimg);
+free(buf);
+Fl_RGB_Image *flimg = new Fl_RGB_Image((const uchar *)rgbimg, 320, 240, 3);
+videoarea->image(flimg);
+videoarea->redraw();
+position->value(position->value()+1);
+if(playing)
+    Fl::repeat_timeout(0.1, show_video);} {selected
+  }
+} 
+
+Function {make_index()} {open return_type void
+} {
+  code {unsigned int len, pos;
+idxf = fopen(filename, "wb");
+for(;;)
+{
+  pos = ftell(fp);
+  nframes++;
+  fwrite(&pos, 1, 4, idxf);
+  if(fread(&len, 1, 4, fp) != 4)
+    break;
+  if(fseek(fp, len, SEEK_CUR) < 0)
+    break;
+}
+fclose(idxf);
+idxf = fopen(filename, "rb");
+fseek(fp, 0, SEEK_SET);} {}
+} 
+
+Function {main(int argc, char **argv)} {open return_type int
+} {
+  code {if(argc == 2)
+  filename = argv[1];
+else if(!(filename = fl_file_chooser("Select video", "*.fsv", NULL)))
+  return 0;
+if(!(fp = fopen(filename, "rb")))
+  return 0;
+filename[strlen(filename)-1] = 'i';
+if((idxf = fopen(filename, "rb")))
+{
+  fseek(idxf, 0, SEEK_END);
+  nframes = ftell(idxf) / 4;
+  fseek(idxf, 0, SEEK_SET);
+} else {
+  make_index();
+}
+j2kcodec_decoder_init();
+make_main_wnd()->show();
+position->range(0, nframes - 1);
+Fl::add_timeout(0.1, show_video);
+return Fl::run();} {}
+} 

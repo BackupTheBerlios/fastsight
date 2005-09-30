@@ -1,0 +1,29 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0106 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include "filters.h"} {} 
+
+Function {make_filters_wnd()} {open
+} {
+  Fl_Window filterswnd {
+    label Filters open selected
+    xywh {461 420 130 110} type Double color 52 visible
+  } {
+    Fl_Check_Button grayscale_enabled {
+      label Grayscale
+      callback {filters_set_enabled((void *)filter_grayscale_apply, grayscale_enabled->value());}
+      tooltip {Grayscale filter.} xywh {10 65 90 20} down_box PLASTIC_DOWN_BOX
+    }
+    Fl_Check_Button average_enabled {
+      label Average
+      callback {filters_set_enabled((void *)filter_average_apply, average_enabled->value());}
+      tooltip {Average filter.} xywh {10 15 90 20} down_box PLASTIC_DOWN_BOX
+    }
+    Fl_Check_Button range_enabled {
+      label Range
+      callback {filters_set_enabled((void *)filter_range_apply, range_enabled->value());}
+      tooltip {Find the lower and higher pixel value, and scale these values to max and min.} xywh {10 40 65 20} down_box PLASTIC_DOWN_BOX
+    }
+  }
+} 
