@@ -1,0 +1,39 @@
+CC       = i586-mingw32msvc-gcc
+CXX      = i586-mingw32msvc-g++
+CFLAGS   = -Wall -O3 -funroll-loops
+CXXFLAGS = -Wall -O3 -funroll-loops
+LDFLAGS  = -mwindows -lm /usr/i586-mingw32msvc/lib/libfltk.a /usr/i586-mingw32msvc/lib/libgdi32.a /usr/i586-mingw32msvc/lib/libole32.a /usr/i586-mingw32msvc/lib/libuuid.a /usr/i586-mingw32msvc/lib/libshell32.a /usr/i586-mingw32msvc/lib/libwsock32.a /usr/i586-mingw32msvc/lib/libavicap32.a
+OBJS     = main.o interface.o j2kcodec.o connect.o \
+           filters/filters.o filters/grayscale.o \
+           filters/average.o filters/filtercfg.o \
+           filters/range.o windows/get_ip.o windows/capcfg.o \
+           windows/capture.o windows/cfgmanager.o \
+           libj2k/bio.o libj2k/cio.o libj2k/dwt.o \
+           libj2k/fix.o libj2k/int.o libj2k/j2k.o \
+           libj2k/log.o libj2k/mct.o libj2k/mqc.o \
+           libj2k/pi.o libj2k/t1.o libj2k/t2.o \
+           libj2k/tcd.o libj2k/tgt.o
+FSVOBJS  = fsvplay.o j2kcodec.o windows/cfgmanager.o \
+           libj2k/bio.o libj2k/cio.o libj2k/dwt.o \
+           libj2k/fix.o libj2k/int.o libj2k/j2k.o \
+           libj2k/log.o libj2k/mct.o libj2k/mqc.o \
+           libj2k/pi.o libj2k/t1.o libj2k/t2.o \
+           libj2k/tcd.o libj2k/tgt.o
+INCLUDE  = -I. -Ifilters -Ilibj2k -Iwindows
+
+%.o: %.c
+	$(CC) $(CFLAGS) $(INCLUDE) -c $< -o $*.o
+
+%.o: %.cxx
+	$(CXX) $(CXXFLAGS) $(INCLUDE) -c $< -o $*.o
+
+all: fastsight.exe fsvplay.exe
+
+fastsight.exe: $(OBJS)
+	$(CXX) $(OBJS) $(LDFLAGS) -o fastsight.exe
+
+fsvplay.exe: $(FSVOBJS)
+	$(CXX) $(FSVOBJS) $(LDFLAGS) -o fsvplay.exe
+  
+clean: 
+	rm -f $(OBJS) $(FSVOBJS) fastsight.exe fsvplay.exe

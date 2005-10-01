@@ -1,0 +1,73 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0106 
+header_name {.h} 
+code_name {.cxx}
+decl {\#include <stdio.h>} {} 
+
+decl {\#include <stdlib.h>} {} 
+
+decl {\#include <windows.h>} {} 
+
+decl {\#include <vfw.h>} {} 
+
+decl {\#include "cfgmanager.h"} {} 
+
+decl {unsigned char opt_to_id[30];} {} 
+
+decl {unsigned char id_to_opt[30];} {} 
+
+Function {make_capcfg_wnd()} {open private
+} {
+  Fl_Window capcfgwnd {
+    label {Video device settings} open
+    xywh {93 511 325 95} type Double color 52 hide
+  } {
+    Fl_Return_Button {} {
+      label OK
+      callback {char stmp[16];
+sprintf(stmp, "%d", opt_to_id[capdevice->value()]);
+cfgmanager_set_value("cap_id", stmp);
+capcfgwnd->hide();}
+      xywh {225 55 85 25} box PLASTIC_THIN_UP_BOX
+    }
+    Fl_Choice capdevice {
+      label {Device:} open
+      xywh {65 20 250 22} down_box BORDER_BOX textsize 11
+    } {}
+  }
+  code {char sname[256];
+char scomment[512];
+char slinet[1024];
+char sline[1024];
+unsigned int i, j = 0, k, l;
+for(i = 0; i < 30; i++)
+{
+  id_to_opt[i] = 0;
+  if(capGetDriverDescription(i, sname, 255, scomment, 511))
+  {
+     id_to_opt[i] = j;
+     opt_to_id[j++] = i;
+     sprintf(slinet, "[%d] %s %s", i, sname, scomment);
+     l = 0;
+     for(k = 0; k <= strlen(slinet); k++)
+     {
+       if(slinet[k]=='&'||slinet[k]=='/'||slinet[k]=='\\\\'||slinet[k]=='_')
+         sline[l++] = '\\\\';
+       sline[l++] = slinet[k];
+     }
+     capdevice->add(sline, 0, 0, 0, 0);
+  }
+}} {selected
+  }
+} 
+
+Function {capture_config()} {open return_type void
+} {
+  code {char *scfg;
+if(!capcfgwnd)
+  make_capcfg_wnd();
+if(!(scfg = cfgmanager_get_value("cap_id")))
+  cfgmanager_set_value("cap_id", scfg = "0");
+capdevice->value(id_to_opt[atoi(scfg)]);
+capcfgwnd->show();} {}
+} 
