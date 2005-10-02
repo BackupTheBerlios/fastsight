@@ -41,6 +41,13 @@ static unsigned char *v4l_map;
 static int v4l_fd = -1;
 static io_method v4l_io;
 
+static void capture_shutdown()
+{
+  if(v4l_io == IO_METHOD_MMAP)
+    munmap(v4l_map);
+  close(v4l_fd);
+}
+
 int capture_init()
 {
   
@@ -50,12 +57,22 @@ int capture_init()
   struct video_window     vw;
   struct video_mbuf       mb;
   
-  int channel    = atoi(cfgmanager_get_value("videochan"));
-  int brightness = atoi(cfgmanager_get_value("brightness"));
-  int contrast   = atoi(cfgmanager_get_value("contrast"));
+  int channel, brightness, contrast;
+  char *s;
   
-  if((v4l_fd = open(cfgmanager_get_value("videodev"),
-    O_RDONLY)) < 0)
+  if(!(s = cfgmanager_get_value("videochan")))
+    s = "0";
+  channel    = atoi(s);
+  if(!(s = cfgmanager_get_value("brightness")))
+    s = "32768";
+  brightness = atoi(s);
+  if(!(s = cfgmanager_get_value("contrast")))
+    s = "32768";
+  contrast   = atoi(s);
+  if(!(s = cfgmanager_get_value("videodev")))
+    s = "/dev/video0";
+  
+  if((v4l_fd = open(s, O_RDONLY)) < 0)
   {
     perror("open");
     return 0;
@@ -132,16 +149,15 @@ int capture_init()
     v4l_map = (unsigned char *)mmap(0, mb.size,
       PROT_READ, MAP_SHARED, v4l_fd, 0);
     if((unsigned char *)-1 == (unsigned char *)v4l_map)
-    {
-      perror("mmap() failed -> falling back to read() method");
-      v4l_io = IO_METHOD_READ;
-    }
+      v4l_io = IO_METHOD_READ; /* fallback to read method */
   }
   
   if(v4l_io == IO_METHOD_MMAP)
     v4l_map += mb.offsets[0];
   else
     v4l_map = (unsigned char *)malloc(320*240*3);
+  
+  atexit(capture_shutdown);
   
   return 1;
   

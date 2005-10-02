@@ -27,12 +27,16 @@
 #ifdef WIN32
 #include <windows.h>
 #include <winsock.h>
+#define recv_t char *
+#define send_t const char *
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#define recv_t void *
+#define send_t void *
 #endif
 
 #include <FL/fl_ask.H>
@@ -60,12 +64,17 @@ static int recv_len = 0;
 
 FILE *record_file = 0;
 
-static void setnonblocking(int sock)
+static void setnonblocking(int s)
 {
+#ifdef WIN32
+  u_long opts = 1;
+  ioctlsocket(s, FIONBIO, &opts);
+#else
   int opts;
-  opts = fcntl(sock,F_GETFL);
+  opts = fcntl(s,F_GETFL);
   opts = opts | O_NONBLOCK;
-  fcntl(sock,F_SETFL,opts);
+  fcntl(s,F_SETFL,opts);
+#endif
 }
 
 static void data_can_be_sent(int fd, void *data)
@@ -83,8 +92,8 @@ static void data_can_be_sent(int fd, void *data)
   
   len = j2kcodec_encode(rgbimg, &j2kimg);
   
-  send(fd, &len, 4, 0);
-  send(fd, j2kimg, len, 0);
+  send(fd, (send_t)&len, 4, 0);
+  send(fd, (send_t)j2kimg, len, 0);
   
   Fl::remove_fd(fd);
   Fl::wait(0.2);
@@ -101,14 +110,14 @@ static void data_received(int fd, void *data)
     if(!recv_buf)
       recv_buf = (unsigned char *)malloc(recv_buf_len = 16);
     
-    recved_len += recv(fd, recv_buf+recved_len, 6-recved_len, 0);
+    recved_len += recv(fd, (recv_t)(recv_buf+recved_len), 6-recved_len, 0);
     
     if(recved_len < 6)
       return;
     
     recv_buf[6] = 0;
 
-    if(strcmp((const char *)recv_buf, connection_key))
+    if(strcmp((char *)recv_buf, connection_key))
     {
       close(fd);
       Fl::remove_fd(fd);
@@ -129,7 +138,7 @@ static void data_received(int fd, void *data)
     
     recv_buf[0] = 'T';
     recv_buf[1] = we_are_sending ? 'S' : 'R';
-    send(fd, recv_buf, 2, 0);
+    send(fd, (send_t)recv_buf, 2, 0);
     
     recved_len = 0;
     do_server_auth = 0;
@@ -144,7 +153,7 @@ static void data_received(int fd, void *data)
     if(!recv_buf)
       recv_buf = (unsigned char *)malloc(recv_buf_len = 16);
     
-    recved_len += recv(fd, recv_buf+recved_len, 2-recved_len, 0);
+    recved_len += recv(fd, (recv_t)(recv_buf+recved_len), 2-recved_len, 0);
     
     if(recved_len < 2)
       return;
@@ -191,7 +200,7 @@ static void data_received(int fd, void *data)
   if(!recv_len)
   {
     
-    recved_len += recv(fd, recv_buf+recved_len, 4-recved_len, 0);
+    recved_len += recv(fd, (recv_t)(recv_buf+recved_len), 4-recved_len, 0);
     
     if(recved_len < 4)
       return;
@@ -210,7 +219,7 @@ static void data_received(int fd, void *data)
     
   }
   
-  recved_len += recv(fd, recv_buf+recved_len, recv_len-recved_len, 0);
+  recved_len += recv(fd, (recv_t)(recv_buf+recved_len), recv_len-recved_len, 0);
   
   if(recved_len >= recv_len)
   {
@@ -334,6 +343,8 @@ void connect_create_client()
   
   if(!(hp = gethostbyname(shost)))
   {
+    fl_alert("Couldn't resolve hostname. Change the"
+      "connection string and try again.");
     already_connecting = 0;
     return;
   }
@@ -351,6 +362,8 @@ void connect_create_client()
   
   if(connect(sock, (struct sockaddr *)&remote, sizeof(remote)) < 0)
   {
+    fl_alert("Couldn't connect to the host. Change the"
+      "connection string and try again.");
     close(sock);
     already_connecting = 0;
     return;
