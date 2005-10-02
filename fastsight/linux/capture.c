@@ -43,8 +43,6 @@ static io_method v4l_io;
 
 static void capture_shutdown()
 {
-  if(v4l_io == IO_METHOD_MMAP)
-    munmap(v4l_map);
   close(v4l_fd);
 }
 
