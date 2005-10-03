@@ -18,6 +18,9 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef _GET_IP_H
+#define _GET_IP_H
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -27,4 +30,6 @@ char *get_ip();
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
