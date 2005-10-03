@@ -33,7 +33,7 @@ static unsigned char *capture_buffer;
 static void capture_shutdown()
 {
   capDriverDisconnect(capture_hwnd); 
-	DestroyWindow(capture_hwnd);
+  DestroyWindow(capture_hwnd);
 }
 
 /* vfw needs this boring stuff... */

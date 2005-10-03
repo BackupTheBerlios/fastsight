@@ -131,11 +131,7 @@ int capture_init()
   vp.palette = VIDEO_PALETTE_RGB24;
   
   if(ioctl(v4l_fd, VIDIOCSPICT, &vp))
-  {
     perror("VIDIOCSPICT");
-    close(v4l_fd);
-    return 0;
-  }
   
   v4l_map = (unsigned char *)-1;
   
