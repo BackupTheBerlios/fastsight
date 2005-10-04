@@ -1,8 +1,8 @@
 CC       = gcc
 CXX      = g++
 CFLAGS   = -Wall -O3 -funroll-loops
-CXXFLAGS = -Wall -O3 -funroll-loops
-LDFLAGS  = -lm -lfltk
+CXXFLAGS = -Wall -O3 -funroll-loops `fltk-config --cxxflags`
+LDFLAGS  = -lm `fltk-config --ldstaticflags`
 OBJS     = main.o interface.o j2kcodec.o connect.o \
            filters/filters.o filters/grayscale.o \
            filters/average.o filters/filtercfg.o \
@@ -30,10 +30,10 @@ INCLUDE  = -I. -Ifilters -Ilibj2k -Ilinux
 all: fastsight fsvplay
 
 fastsight: $(OBJS)
-	$(CXX) $(LDFLAGS) $(OBJS) -o fastsight
+	$(CXX) $(OBJS) $(LDFLAGS) -o fastsight
 
 fsvplay: $(FSVOBJS)
-	$(CXX) $(LDFLAGS) $(FSVOBJS) -o fsvplay
+	$(CXX) $(FSVOBJS) $(LDFLAGS) -o fsvplay
   
 clean: 
 	rm -f $(OBJS) $(FSVOBJS) fastsight fsvplay
