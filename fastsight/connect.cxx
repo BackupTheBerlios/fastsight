@@ -86,8 +86,7 @@ static void data_can_be_sent(int fd, void *data)
   
   filters_apply(rgbimg);
   
-  Fl_RGB_Image *flimg = new Fl_RGB_Image((const uchar *)rgbimg, 320, 240, 3);
-  videoarea->image(flimg);
+  videoarea->rgbimg(rgbimg);
   videoarea->redraw();
   
   len = j2kcodec_encode(rgbimg, &j2kimg);
@@ -238,8 +237,7 @@ static void data_received(int fd, void *data)
     
     filters_apply(rgbimg);
     
-    Fl_RGB_Image *flimg = new Fl_RGB_Image((const uchar *)rgbimg, 320, 240, 3);
-    videoarea->image(flimg);
+    videoarea->rgbimg(rgbimg);
     videoarea->redraw();
     
     recved_len = 0;

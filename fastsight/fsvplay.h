@@ -6,10 +6,11 @@
 #include <FL/Fl_Double_Window.H>
 extern Fl_Double_Window *mainwnd;
 #include <FL/Fl_Box.H>
-extern Fl_Box *videoarea;
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Slider.H>
 extern Fl_Slider *position;
+#include "Fl_VideoArea.H"
+extern Fl_VideoArea *videoarea;
 Fl_Double_Window* make_main_wnd();
 void show_video(void*);
 void make_index();

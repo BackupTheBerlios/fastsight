@@ -22,13 +22,12 @@ decl {extern int enc_rate;} {}
 
 decl {extern FILE *record_file;} {} 
 
-Function {make_main_wnd()} {open
-} {
+Function {make_main_wnd()} {} {
   Fl_Window mainwnd {
-    label fastsight
-    xywh {296 167 340 330} type Double color 52 hide
+    label fastsight selected
+    xywh {108 66 340 324} type Double color 52 visible
   } {
-    Fl_Box videoarea {
+    Fl_Box {} {
       xywh {5 55 330 250} box EMBOSSED_BOX color 7
     }
     Fl_Button {} {
@@ -40,7 +39,7 @@ Function {make_main_wnd()} {open
       tooltip {Video device settings} image {images/videosets.png} xywh {65 5 50 45} box PLASTIC_UP_BOX color 55
     }
     Fl_Box statusbar {
-      xywh {0 310 340 20} box THIN_DOWN_BOX color 52 align 17
+      xywh {0 308 340 15} box THIN_DOWN_BOX color 52 labelfont 4 labelsize 9 align 17
     }
     Fl_Button {} {
       callback {filterswnd->show();}
@@ -62,8 +61,9 @@ for(i = 1; ; i++)
 }
 fp = fopen(path, "wb");
 fputs("P6\\n320 240\\n255\\n", fp);
-fwrite(((Fl_RGB_Image *)videoarea->image())->array, 320*240*3, 1, fp);
-fclose(fp);}
+fwrite(videoarea->rgbimg(), 320*240*3, 1, fp);
+fclose(fp);
+statusbar->label("[ Shot Taked ]");}
       tooltip {Take a shot} image {images/shot.png} xywh {175 5 50 45} box PLASTIC_UP_BOX color 55
     }
     Fl_Button {} {
@@ -88,12 +88,17 @@ fclose(fp);}
   }
   record_file = fopen(path, "wb");
   statusbar->label("[ Recording Started ]");
-}} selected
+}}
       tooltip {Start or stop recording video} image {images/record.png} xywh {230 5 50 45} box PLASTIC_UP_BOX color 55
     }
     Fl_Button {} {
       callback {aboutwnd->show();}
       tooltip About image {images/about.png} xywh {285 5 50 45} box PLASTIC_UP_BOX color 55
+    }
+    Fl_Box videoarea {
+      xywh {10 60 320 240} color 7
+      code0 {\#include "Fl_VideoArea.H"}
+      class Fl_VideoArea
     }
   }
 } 

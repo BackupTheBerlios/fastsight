@@ -20,9 +20,9 @@ Function {make_main_wnd()} {open
 } {
   Fl_Window mainwnd {
     label {fastsight video player} open
-    xywh {396 395 340 300} type Double color 52 hide
+    xywh {396 395 340 300} type Double color 52 visible
   } {
-    Fl_Box videoarea {
+    Fl_Box {} {
       xywh {4 45 330 250} box EMBOSSED_BOX color 7
     }
     Fl_Button {} {
@@ -42,6 +42,11 @@ fseek(fp, pos, SEEK_SET);
 if(!playing)
   show_video(0);}
       xywh {90 10 245 25} type {Horz Knob} box PLASTIC_THIN_DOWN_BOX
+    }
+    Fl_Box videoarea {
+      xywh {10 50 320 240} color 7
+      code0 {\#include "Fl_VideoArea.H"}
+      class Fl_VideoArea
     }
   }
 } 
@@ -63,13 +68,11 @@ if(fread(buf, 1, len, fp) != len)
 }
 j2kcodec_decode(buf, len, &rgbimg);
 free(buf);
-Fl_RGB_Image *flimg = new Fl_RGB_Image((const uchar *)rgbimg, 320, 240, 3);
-videoarea->image(flimg);
+videoarea->rgbimg(rgbimg);
 videoarea->redraw();
 position->value(position->value()+1);
 if(playing)
-    Fl::repeat_timeout(0.1, show_video);} {selected
-  }
+    Fl::repeat_timeout(0.1, show_video);} {}
 } 
 
 Function {make_index()} {open return_type void

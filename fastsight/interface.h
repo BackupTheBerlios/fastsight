@@ -6,9 +6,10 @@
 #include <FL/Fl_Double_Window.H>
 extern Fl_Double_Window *mainwnd;
 #include <FL/Fl_Box.H>
-extern Fl_Box *videoarea;
 #include <FL/Fl_Button.H>
 extern Fl_Box *statusbar;
+#include "Fl_VideoArea.H"
+extern Fl_VideoArea *videoarea;
 Fl_Double_Window* make_main_wnd();
 extern Fl_Double_Window *configwnd;
 #include <FL/Fl_Input.H>

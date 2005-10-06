@@ -14,8 +14,6 @@ extern FILE *record_file;
 
 Fl_Double_Window *mainwnd=(Fl_Double_Window *)0;
 
-Fl_Box *videoarea=(Fl_Box *)0;
-
 static void cb_(Fl_Button*, void*) {
   show_config_wnd();
 }
@@ -551,8 +549,9 @@ for(i = 1; ; i++)
 }
 fp = fopen(path, "wb");
 fputs("P6\n320 240\n255\n", fp);
-fwrite(((Fl_RGB_Image *)videoarea->image())->array, 320*240*3, 1, fp);
+fwrite(videoarea->rgbimg(), 320*240*3, 1, fp);
 fclose(fp);
+statusbar->label("[ Shot Taked ]");
 }
 
 static unsigned char idata_shot[] =
@@ -974,12 +973,14 @@ BD\21w\0\0\0\13\0\0\0\3\0\0\0\0\0\0\0\1\0\0\0\377\360\370?\377\360\370?\377\
 \3\0\0\0\7\0\0\0\r\0\0\0\t\0\0\0\3\0\0\0\0\0\0\0\0";
 static Fl_RGB_Image image_about(idata_about, 24, 24, 4, 0);
 
+Fl_VideoArea *videoarea=(Fl_VideoArea *)0;
+
 Fl_Double_Window* make_main_wnd() {
   Fl_Double_Window* w;
-  { Fl_Double_Window* o = mainwnd = new Fl_Double_Window(340, 330, "fastsight");
+  { Fl_Double_Window* o = mainwnd = new Fl_Double_Window(340, 324, "fastsight");
     w = o;
     o->color(FL_LIGHT2);
-    { Fl_Box* o = videoarea = new Fl_Box(5, 55, 330, 250);
+    { Fl_Box* o = new Fl_Box(5, 55, 330, 250);
       o->box(FL_EMBOSSED_BOX);
       o->color(FL_BACKGROUND2_COLOR);
     }
@@ -997,9 +998,11 @@ Fl_Double_Window* make_main_wnd() {
       o->image(image_videosets);
       o->callback((Fl_Callback*)cb_1);
     }
-    { Fl_Box* o = statusbar = new Fl_Box(0, 310, 340, 20);
+    { Fl_Box* o = statusbar = new Fl_Box(0, 308, 340, 15);
       o->box(FL_THIN_DOWN_BOX);
       o->color(FL_LIGHT2);
+      o->labelfont(4);
+      o->labelsize(9);
       o->align(FL_ALIGN_TOP|FL_ALIGN_INSIDE);
     }
     { Fl_Button* o = new Fl_Button(120, 5, 50, 45);
@@ -1029,6 +1032,17 @@ Fl_Double_Window* make_main_wnd() {
       o->color((Fl_Color)55);
       o->image(image_about);
       o->callback((Fl_Callback*)cb_5);
+    }
+    { Fl_VideoArea* o = videoarea = new Fl_VideoArea(10, 60, 320, 240);
+      o->box(FL_NO_BOX);
+      o->color(FL_BACKGROUND2_COLOR);
+      o->selection_color(FL_BACKGROUND_COLOR);
+      o->labeltype(FL_NORMAL_LABEL);
+      o->labelfont(0);
+      o->labelsize(14);
+      o->labelcolor(FL_BLACK);
+      o->align(FL_ALIGN_CENTER);
+      o->when(FL_WHEN_RELEASE);
     }
     o->end();
   }

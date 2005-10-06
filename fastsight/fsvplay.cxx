@@ -11,8 +11,6 @@ static FILE *fp, *idxf;
 
 Fl_Double_Window *mainwnd=(Fl_Double_Window *)0;
 
-Fl_Box *videoarea=(Fl_Box *)0;
-
 static void cb_(Fl_Button*, void*) {
   playing = 1;
 Fl::repeat_timeout(0.1, show_video);
@@ -180,12 +178,14 @@ if(!playing)
   show_video(0);
 }
 
+Fl_VideoArea *videoarea=(Fl_VideoArea *)0;
+
 Fl_Double_Window* make_main_wnd() {
   Fl_Double_Window* w;
   { Fl_Double_Window* o = mainwnd = new Fl_Double_Window(340, 300, "fastsight video player");
     w = o;
     o->color(FL_LIGHT2);
-    { Fl_Box* o = videoarea = new Fl_Box(4, 45, 330, 250);
+    { Fl_Box* o = new Fl_Box(4, 45, 330, 250);
       o->box(FL_EMBOSSED_BOX);
       o->color(FL_BACKGROUND2_COLOR);
     }
@@ -205,6 +205,17 @@ Fl_Double_Window* make_main_wnd() {
       o->type(5);
       o->box(FL_PLASTIC_THIN_DOWN_BOX);
       o->callback((Fl_Callback*)cb_position);
+    }
+    { Fl_VideoArea* o = videoarea = new Fl_VideoArea(10, 50, 320, 240);
+      o->box(FL_NO_BOX);
+      o->color(FL_BACKGROUND2_COLOR);
+      o->selection_color(FL_BACKGROUND_COLOR);
+      o->labeltype(FL_NORMAL_LABEL);
+      o->labelfont(0);
+      o->labelsize(14);
+      o->labelcolor(FL_BLACK);
+      o->align(FL_ALIGN_CENTER);
+      o->when(FL_WHEN_RELEASE);
     }
     o->end();
   }
@@ -227,8 +238,7 @@ if(fread(buf, 1, len, fp) != len)
 }
 j2kcodec_decode(buf, len, &rgbimg);
 free(buf);
-Fl_RGB_Image *flimg = new Fl_RGB_Image((const uchar *)rgbimg, 320, 240, 3);
-videoarea->image(flimg);
+videoarea->rgbimg(rgbimg);
 videoarea->redraw();
 position->value(position->value()+1);
 if(playing)
